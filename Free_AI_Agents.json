@@ -1,0 +1,724 @@
+{
+  "name": "Free AI Agents",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1080,
+        -20
+      ],
+      "id": "3f1f1512-39de-4245-80ac-1caec5eef15a",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nNheJXGNjY8Zbaer",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.snippet }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Invoice Number",
+              "description": "Extract the invoice number from the text."
+            },
+            {
+              "name": "Invoice Date",
+              "description": "Extract the date mentioned in the text."
+            },
+            {
+              "name": "Total Amount",
+              "description": "Extract the payment amount from the text."
+            },
+            {
+              "name": "Due Date",
+              "description": "Extract the payment due date from the text."
+            },
+            {
+              "name": "Sender Name",
+              "description": "={{ $json.From }}"
+            },
+            {
+              "name": "Email Subject",
+              "description": "={{ $json.Subject }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        -860,
+        -20
+      ],
+      "id": "533a0931-1927-477e-95b0-9f78398076e2",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1dS6zW95FhmrEuYSOLuxFs59lFNxAA5WzMc6muFLPeBU/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1dS6zW95FhmrEuYSOLuxFs59lFNxAA5WzMc6muFLPeBU/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice Number": "={{ $json.output['Invoice Number'] }}",
+            "Invoice Date": "={{ $json.output['Invoice Date'] }}",
+            "Total Amount": "={{ $json.output['Total Amount'] }}",
+            "Due Date": "={{ $json.output['Due Date'] }}",
+            "Sender Name": "={{ $json.output['Sender Name'] }}",
+            "Email Subject": "={{ $json.output['Email Subject'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice Number",
+              "displayName": "Invoice Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Invoice Date",
+              "displayName": "Invoice Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total Amount",
+              "displayName": "Total Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sender Name",
+              "displayName": "Sender Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Subject",
+              "displayName": "Email Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -500,
+        -20
+      ],
+      "id": "f2c14678-1ec0-4670-b1d4-f151e14c4ece",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zFGtEGGvO96o5SKN",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "feedUrl": "https://www.espncricinfo.com/rss/content/story/feeds/0.xml"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        360
+      ],
+      "id": "68b91a2b-d4e3-4c48-a3cd-c5234b6da963",
+      "name": "RSS Feed Trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        360
+      ],
+      "id": "e8da2036-80f4-4ef3-ad82-8aae20cec529",
+      "name": "Summarization Chain"
+    },
+    {
+      "parameters": {
+        "chatId": "7646028648",
+        "text": "={{ $json.response.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        360
+      ],
+      "id": "0871ec95-3b4e-4de6-9da6-f0ed91f54d97",
+      "name": "Telegram",
+      "credentials": {
+        "telegramApi": {
+          "id": "pK0awNHROowsshPq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Getting the knowledge-base from the user",
+        "formDescription": "Context setting - to answer the propriety FAQs",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload File",
+              "fieldType": "file",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Your Question to us?",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        -20
+      ],
+      "id": "23b479b7-08a9-4604-b4c8-6e449e048c2c",
+      "name": "On form submission",
+      "webhookId": "1fe52e27-4402-4614-909e-db36a364eab8"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "=Upload_File",
+        "destinationKey": "extractedText",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -20
+      ],
+      "id": "daf1c95a-d84b-42c2-9928-8395fb58b56b",
+      "name": "Extract from File",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('On form submission').item.json['Your Question to us?'] }}",
+        "options": {
+          "systemPromptTemplate": "=Use the following pieces of context to answer the users question.\nIf you don't know the answer, just say that you don't know, don't try to make up an answer.\n----------------\nContext:\n{{ $json.extractedText }}\n\nuser question:\n{{ $('On form submission').item.json['Your Question to us?'] }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "typeVersion": 1.4,
+      "position": [
+        280,
+        -20
+      ],
+      "id": "7ce00be6-71a5-4500-95d8-ccb30f61956f",
+      "name": "Question and Answer Chain"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        420,
+        200
+      ],
+      "id": "a6c6d4a0-c2ae-4adf-be82-794720ba79fa",
+      "name": "Vector Store Retriever"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1,
+      "position": [
+        440,
+        340
+      ],
+      "id": "ca87cafe-9a0f-4352-95a1-e6523a5e3e07",
+      "name": "In-Memory Vector Store"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        540,
+        500
+      ],
+      "id": "e0fa065c-828b-4f6f-bdbc-a19985e3f2ab",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "S8pGEripnm8TxZEr",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.feedback }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.sentimentAnalysis",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        400
+      ],
+      "id": "bd9e0a35-9ad5-4770-b205-cd311580d85d",
+      "name": "Sentiment Analysis"
+    },
+    {
+      "parameters": {
+        "formTitle": "Customer Feedback Form",
+        "formDescription": "Please share your valuable feedback to us to improve our quality!!!",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "customer_name"
+            },
+            {
+              "fieldLabel": "feedback",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -340,
+        400
+      ],
+      "id": "2621d44f-cffb-4e84-bd63-42461df566d9",
+      "name": "On form submission1",
+      "webhookId": "13d29412-67ca-4c67-8e1c-0b22cac0e5df"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1fmYjvbmDb2QfHVFymYO43USjNqqlWqz6qb4TQchcFGg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1fmYjvbmDb2QfHVFymYO43USjNqqlWqz6qb4TQchcFGg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_name": "={{ $json.customer_name }}",
+            "feedback": "={{ $json.feedback }}",
+            "Sentiment": "={{ $json.sentimentAnalysis.category }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "feedback",
+              "displayName": "feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        400
+      ],
+      "id": "9296ca57-e6b0-4ddc-98c7-8f153549c379",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zFGtEGGvO96o5SKN",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        560
+      ],
+      "id": "03ed4b73-0983-480b-ae27-1dddd2e7a3e7",
+      "name": "Ollama Model3",
+      "credentials": {
+        "ollamaApi": {
+          "id": "S8pGEripnm8TxZEr",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -860,
+        180
+      ],
+      "id": "63ecd36a-6926-4c58-b94b-fb22245bf109",
+      "name": "Lllama model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "S8pGEripnm8TxZEr",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -820,
+        560
+      ],
+      "id": "a12eaea5-b6cd-4ace-b27b-7cc1aae403bd",
+      "name": "Llama model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "S8pGEripnm8TxZEr",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        160,
+        200
+      ],
+      "id": "847b38e2-55a4-4ee4-a28d-957e74421895",
+      "name": "llama model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "S8pGEripnm8TxZEr",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Trigger": {
+      "main": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarization Chain": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "In-Memory Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "In-Memory Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment Analysis": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "Sentiment Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sentiment Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lllama model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llama model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llama model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "235bfc1b-acc3-47fc-9ef1-9df163e94e47",
+  "meta": {
+    "instanceId": "310b0f69384911a9413eca7d376414d3d548a2f88cf01d04c15ed721bf4729f2"
+  },
+  "id": "UI0eSrgunPn4JVcz",
+  "tags": []
+}

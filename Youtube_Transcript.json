@@ -1,0 +1,172 @@
+{
+  "name": "Youtube Transcript",
+  "nodes": [
+    {
+      "parameters": {
+        "youtubeId": "https://youtu.be/ymIY9bWHVfY?si=6aLCaZJ76f9JTUlg"
+      },
+      "type": "@anpigon/n8n-nodes-youtube-transcript.freeYoutubeTranscriptNode",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "589dde34-82a9-4f7d-9f8b-9b30e1d89368",
+      "name": "Youtube Transcript",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b391d178-9af1-4b48-8168-d56a50b8aeda",
+              "name": "text",
+              "value": "={{ $input.all().map(i => i.json.transcript.map(t => t.text).join(' ')).join(' ').replace(/&amp;/g, '&').replace(/&#39;/g, \"'\") }}\n\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        460,
+        0
+      ],
+      "id": "fc4b8cbc-6fd3-4467-b702-35e1fe19a9c3",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Summarize the provided text into a concise, structured format with bullet points. \n\n- Keep it simple and to the point.\n- Extract key insights only.\n- Format using proper Markdown for readability.\n- Avoid unnecessary details.\n- Use a professional and structured approach.\n\nText to summarize: {{ $json.text }}",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        680,
+        0
+      ],
+      "id": "1ad5b145-cae4-4e97-a323-3ebfc74969a8",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "v0jAglhy2yTGipbT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7cdc9420-a215-45e3-83ba-61620579f881",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "1Vlp06dsDl9rGDyw_HDV-KC-dn4fajYal8Irf0FXXGNs",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $json.message.content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "d5eab98e-e38d-45f9-b5a9-b6edf0db347d",
+      "name": "Google Docs",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "PmdFtoRCzeQidz7b",
+          "name": "Google Docs account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Youtube Transcript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Youtube Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Google Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "21dacc14-123b-4e88-8d84-2f4f92923a12",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "96751ee354fd8dd7a8f4f3664391bdd8be5d2897c9237fb3d4d2d8d3f66502c9"
+  },
+  "id": "r2nRT8lkHt6OnJ1X",
+  "tags": []
+}

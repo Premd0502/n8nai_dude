@@ -1,0 +1,148 @@
+{
+  "name": "PDF Extract",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -200,
+        -40
+      ],
+      "id": "2bfab7b4-f05a-4096-ba61-6b91f3415900",
+      "name": "Telegram Trigger",
+      "webhookId": "5e42d947-8d56-4aec-a985-faf01158cf2d",
+      "credentials": {
+        "telegramApi": {
+          "id": "NqVIUvUpKTMpOAlI",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        20,
+        -40
+      ],
+      "id": "895087bf-2168-4200-b1cb-297b8f7ccc69",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=\"Instruction\": \"Extract and format key details from this document into a clear and structured text message suitable for Telegram. The message should include: \\n\\n🔹 Invoice Details (Invoice Number, Total Amount, Gross Amount, VAT)\n🔹 Service Charges (Transaction Fees, Query Fees) \n🔹 Individual Query Charges (Summarized List)\n    Use bullet points, spacing, and emojis to improve readability. The response should be plain text (not JSON).\n\ninput: {{ $json.text }}",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        240,
+        -40
+      ],
+      "id": "5f4d6ca8-950a-4ce3-a405-d382deab657c",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "v0jAglhy2yTGipbT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.message.content }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        -40
+      ],
+      "id": "4cf9ee81-4da4-48fe-8316-a34c0f103e78",
+      "name": "Telegram",
+      "webhookId": "db2e30e7-093e-4f17-8c1a-240d39eec998",
+      "credentials": {
+        "telegramApi": {
+          "id": "NqVIUvUpKTMpOAlI",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d1ba916e-18e2-49c5-81b6-516abccafcb0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "96751ee354fd8dd7a8f4f3664391bdd8be5d2897c9237fb3d4d2d8d3f66502c9"
+  },
+  "id": "OZ8wnEaJ2Fqb5g4X",
+  "tags": []
+}

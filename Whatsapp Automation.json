@@ -1,0 +1,287 @@
+{
+  "name": "Whatsapp Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -432
+      ],
+      "id": "982726d3-4db5-434a-8258-fd95824caf64",
+      "name": "WhatsApp Trigger",
+      "webhookId": "e5858902-9aff-4d2f-9534-22e8ddbe74fa",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "lCpElY3MxzrqxQNH",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Answer the question:  {{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "You are a helpful tool calling agent, \n\nsetup the meeting invite:\n   - Call the google calendar tool for the meeting invite\n\nSend the gmail:\n    - Call the gmail tool for the email"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -448
+      ],
+      "id": "9e987c32-af69-4a8f-a5de-cf1dc6965b2f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        -256
+      ],
+      "id": "c18c08be-e95e-4490-8789-d10b2cf44039",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Cra3RiQ7Ncl1CQkh",
+          "name": "manoj_ai_dude"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "799666403227722",
+        "recipientPhoneNumber": "919080314233",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -448
+      ],
+      "id": "48de2ad0-144a-4f80-b5a1-5662828fb3a0",
+      "name": "WhatsApp Business Cloud",
+      "webhookId": "a3548bef-5c0c-4bee-a773-2126efa25975",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "egqby6krjR0UhkJq",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=whatsapp_{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1200,
+        -256
+      ],
+      "id": "2bffa669-b65e-41f4-9c62-b1f751f52161",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1026125c-1cb5-4158-92a1-7af6bdfa6270",
+              "leftValue": "={{ $json.messages[0].from }}",
+              "rightValue": "919080314233",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        -432
+      ],
+      "id": "7da1b10e-d52f-437a-95c2-efb9d91747dc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "theaidude12@gmail.com",
+          "mode": "list",
+          "cachedResultName": "theaidude12@gmail.com"
+        },
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1360,
+        -240
+      ],
+      "id": "fcdb6655-ad37-484a-a3f6-802f759c1477",
+      "name": "Appointment Booking",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "hiVwNeBlNAGzlAsN",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1504,
+        -240
+      ],
+      "id": "67688b1c-7c0b-4e24-9d71-a7b02c473589",
+      "name": "Gmail Agent",
+      "webhookId": "72c0b3f3-88b2-4932-9354-8fb6837c39bb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "I2fdnjw9Tzr7Wybh",
+          "name": "the_ai_dude_mail"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Business Cloud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Appointment Booking": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "ee2005c0-db11-4c7f-8518-af9258af7bd9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "db679ddfba2bebd855c9cc0f7a1082efc502bd3da70696d5a936b05f3034c9a3"
+  },
+  "id": "jPMwH1s8hvGCYgkf",
+  "tags": []
+}

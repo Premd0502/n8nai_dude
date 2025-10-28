@@ -1,0 +1,206 @@
+{
+  "name": "Appointment Booking - Gmeet",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0551981f-cca2-4151-859c-3c28976627c3",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        820,
+        580
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "K5sc6CGzdBjY29ud",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "0d4b0c22-5795-4b05-9be4-e282813a17e9",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        980,
+        580
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool when you’re asked to retrieve events data.",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "tamilcoder43@gmail.com",
+          "mode": "list",
+          "cachedResultName": "tamilcoder43@gmail.com"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "options": {
+          "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+          "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}"
+        }
+      },
+      "id": "13669a99-239b-4882-ba96-180b9d16866a",
+      "name": "Google Calendar - Get Events",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        1140,
+        560
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "xnZVdQVvUIwaYca5",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "tamilcoder43@gmail.com",
+          "mode": "list",
+          "cachedResultName": "tamilcoder43@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "useDefaultReminders": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Use_Default_Reminders', ``, 'boolean') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', ``, 'string') }}"
+          ],
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "id": "4667cbe1-d20c-45f4-8e50-807e38fe19a8",
+      "name": "Google Calendar - Create events",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        1320,
+        560
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "xnZVdQVvUIwaYca5",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a Google Calendar assistant.\nYour primary goal is to assist the user in managing their calendar effectively using two tools: Event Creation and Event Retrieval. Always base your responses on the current date: \n{{ DateTime.local().setZone('Asia/Kolkata').toFormat('cccc d LLLL yyyy') }}.\nGeneral Guidelines:\nIf the user's initial message is vague (e.g., \"hello\" or a generic greeting) or does not specify a request, explain your capabilities clearly:\nExample: \"Hello! I can help you manage your Google Calendar. You can ask me to create an event or retrieve event data. What would you like me to do?\"\nIf the user specifies a request in their first message, begin preparing to use the appropriate tool:\nFor event creation, gather necessary details like start date, end date, title, and description.\nFor event retrieval, ask for the date range or time period they want to query.\nTool: Event Creation\nWhen asked to create an event:\n\nRequest the start and end dates/times from the user.\nDate format: YYYY-MM-DD HH:mm:ss\nCollect the following information:\nstart_date: Exact start date and time of the event.\nend_date: Exact end date and time of the event.\nevent_title: Event title in uppercase. Suggest one if not provided.\nevent_description: Generate a brief description and present it for confirmation.\nTool: Event Retrieval\nWhen asked to retrieve events:\n\nAsk for the date range or period they are interested in. Examples:\nFor \"last week,\" retrieve events from Monday of the previous week to Friday of the same week.\nFor \"today,\" use the current date.\nFormat the date range:\nstart_date: Start date and time in YYYY-MM-DD HH:mm:ss.\nend_date: End date and time in YYYY-MM-DD HH:mm:ss.\nKey Behaviors:\nClarity: Provide a clear and helpful introduction when the user's request is unclear.\nValidation: Confirm details with the user before finalizing actions.\nAdaptation: Handle varying levels of detail in requests (e.g., \"Add a meeting for next Monday morning\" or \"Retrieve my events for this weekend\").\nProactivity: Offer suggestions to fill in missing details or clarify ambiguous inputs.\nLanguage Matching: Ensure all interactions, including event titles, descriptions, and messages, are in the user's language to provide a seamless experience.\n\nPlease ensure it blocked correct timing in the google calendar.\n\nPlease schedule a meeting in IST timezone only! Don't use the other timezone"
+        }
+      },
+      "id": "f36e3cf3-ad65-4fd9-903c-33998801be69",
+      "name": "Calendar AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        960,
+        380
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋 I’m **AI Dude**, your Google Calendar Assistant.  \nWant to schedule an event or check availability? Just say the word! 🧠📅",
+        "options": {}
+      },
+      "id": "c5add119-9db3-4e91-a5fa-e09ce49e18ee",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        720,
+        380
+      ],
+      "webhookId": "5308edc9-738b-4aae-a789-214e2392579a",
+      "typeVersion": 1.1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Calendar AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Calendar AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar - Get Events": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar - Create events": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Calendar AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "66411240-c301-4cc0-bf8d-d5be629fc9ca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "96751ee354fd8dd7a8f4f3664391bdd8be5d2897c9237fb3d4d2d8d3f66502c9"
+  },
+  "id": "lD0DjBxmLBuP1nco",
+  "tags": []
+}

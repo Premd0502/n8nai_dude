@@ -1,0 +1,674 @@
+{
+  "name": "Automatic logistic invoice extractor",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "invoice",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "invoice",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        120,
+        -100
+      ],
+      "id": "44049b4f-586d-4557-8b45-e367cf4211bf",
+      "name": "On form submission",
+      "webhookId": "e9c1a094-e83e-4431-8bac-20dd66f514a6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "invoice"
+            },
+            {
+              "name": "purpose",
+              "value": "ocr"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -360
+      ],
+      "id": "f279db62-e995-4840-b4c3-9ecaa04e0b67",
+      "name": "send pdf to Mistral",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "gu0gMFV59yEkk9wt",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mistral.ai/v1/files/{{ $json.id }}/url?expiry=24",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        -360
+      ],
+      "id": "e92da3c2-ecf1-490f-8b17-4d1499e2c713",
+      "name": "mistral - get signed url",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "gu0gMFV59yEkk9wt",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/ocr",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"document_url\",\n    \"document_url\": \"{{ $json.url }}\"\n  },\n  \"include_image_base64\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        -360
+      ],
+      "id": "5f6291b3-a3a4-4afa-91c8-1bef049d8425",
+      "name": "Get Parsed Invoice",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "gu0gMFV59yEkk9wt",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "message.content.transactions",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        720,
+        220
+      ],
+      "id": "d7001c63-3e22-46a2-8b06-bfaacb9ca106",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-tesseractjs.tesseractNode",
+      "typeVersion": 1,
+      "position": [
+        620,
+        -60
+      ],
+      "id": "d1cea09e-93c8-4c8a-95f2-1b53dc4eba9f",
+      "name": "Tesseract"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b1c5520b-7164-4b0e-9fa4-20f8f96e5e18",
+              "leftValue": "={{ $json.pages[0].markdown }}",
+              "rightValue": "![img-0.jpeg](img-0.jpeg)",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        -360
+      ],
+      "id": "11d54f51-c757-4858-b81f-12f350777337",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.invoice[0].mimetype }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e3abae33-47a4-4685-9cb9-667c141eab61"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pdf"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "944c9e2d-fdd2-411d-b606-42d779675864",
+                    "leftValue": "={{ $json.invoice[0].mimetype }}",
+                    "rightValue": "=image/jpeg",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "jpeg"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d5180c96-37ea-4ac0-a153-aa14d3c59655",
+                    "leftValue": "={{ $json.invoice[0].mimetype }}",
+                    "rightValue": "image/png",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "png"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        380,
+        -100
+      ],
+      "id": "23bf4490-6603-4039-8155-a4a188c2bc12",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        80,
+        220
+      ],
+      "id": "61091150-35ce-443f-901c-6e8f40d9710c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a document parser that extracts all transaction records from markdown tables or unstructured receipt-like text.\n\nYou must return a JSON array where each element includes the following keys: \n- date\n- time\n- transaction_type\n- description\n- amount\n\nDo not return only one record — process the entire input and return all transaction rows.\n\nIf any field is missing in a row, return it as an empty string.\n\nReturn only a valid JSON array. No explanations, no extra text.",
+              "role": "system"
+            },
+            {
+              "content": "=Extract all transactions from the below markdown table. Return as a JSON array of objects with keys: date, time, transaction_type, description, and amount.\n\n{{ $json.formatted_input }}"
+            },
+            {
+              "content": "=[\n  {\n    \"date\": \"2025-02-18\",\n    \"time\": \"21:20\",\n    \"transaction_type\": \"EPS Car Park Payment\",\n    \"description\": \"4\",\n    \"amount\": \"-3.30\"\n  },\n  {\n    \"date\": \"2025-02-18\",\n    \"time\": \"18:54\",\n    \"transaction_type\": \"EPS Car Park Payment\",\n    \"description\": \"4\",\n    \"amount\": \"-1.40\"\n  },\n  ...\n]\n",
+              "role": "assistant"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        320,
+        220
+      ],
+      "id": "87e15527-ddb3-449c-82f5-b016b3067e56",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "K5sc6CGzdBjY29ud",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xu7K1tU1ybLPhCAc-Og2LKnkXS-tl_VY-rxWXCe2PdU",
+          "mode": "list",
+          "cachedResultName": "Transaction Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xu7K1tU1ybLPhCAc-Og2LKnkXS-tl_VY-rxWXCe2PdU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "23-04-2025",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xu7K1tU1ybLPhCAc-Og2LKnkXS-tl_VY-rxWXCe2PdU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $json.date }}",
+            "time": "={{ $json.time }}",
+            "transaction_type": "={{ $json.transaction_type }}",
+            "description": "={{ $json.description }}",
+            "amount": "={{ $json.amount }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "time",
+              "displayName": "time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "transaction_type",
+              "displayName": "transaction_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1000,
+        220
+      ],
+      "id": "590e7836-bf4b-4ee9-892c-b7c4866b619d",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dQI8fsfXAbv2jeY1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const pages = $json.pages;\nlet combinedMarkdown = \"\";\n\nfor (let page of pages) {\n  combinedMarkdown += page.markdown + \"\\n\\n\";\n}\n\nreturn [\n  {\n    json: {\n      formatted_input: combinedMarkdown.trim()\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        -400
+      ],
+      "id": "177569fc-f689-4f6f-bac7-8f2909e9db97",
+      "name": "Combain Pages"
+    },
+    {
+      "parameters": {
+        "jsCode": "const base64Image = $json.pages[0].images[0].image_base64;\n\nreturn [\n  {\n    binary: {\n      data: {\n        data: base64Image.split(',')[1],\n        mimeType: 'image/jpeg',\n        fileName: 'ocr-page.jpg'\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        -260
+      ],
+      "id": "7a307246-cea8-4643-a40c-42d10991721f",
+      "name": "Convert to Image"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ac3b56c0-bddb-46b5-8bac-f00f371c81e5",
+              "name": "formatted_input",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        -40
+      ],
+      "id": "c934a282-46e5-4505-9a63-315d98701f37",
+      "name": "Set Output Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const input = item.json.formatted_input;\n\n  // Replace $ delimiters and extra junk\n  let cleaned = input.replace(/\\$/g, ' ')\n                     .replace(/[^a-zA-Z0-9\\s:/().,-]/g, ' ')\n                     .replace(/\\s+/g, ' ')\n                     .trim();\n\n  // Optionally shorten repeated irrelevant text (just keeping date/time/amount lines)\n  const regex = /(\\d{2}\\/\\d{2}\\/\\d{2})\\s+(\\d{2}:\\d{2}:\\d{2}).*?(AMOUNT|AHOUNT|ANCUNT|AHOLNT|ANOUNT|ANGUNT|AMOUNTE?)\\s*[$:]?\\s*(\\d+\\.\\d{2})/gi;\n  \n  let matches = [];\n  let match;\n  while ((match = regex.exec(cleaned)) !== null) {\n    matches.push(`${match[1]} ${match[2]} - Amount $${match[4]} - EPS Car Park Payment`);\n  }\n\n  // Build OpenAI-friendly prompt\n  const prompt = `Extract structured data from the following list of EPS Car Park transactions:\\n\\n` +\n    matches.map((line, i) => `${i + 1}. ${line}`).join('\\n') +\n    `\\n\\nFormat:\\n[\\n  {\\n    \"date\": \"YYYY-MM-DD\",\\n    \"time\": \"HH:MM:SS\",\\n    \"transaction_type\": \"EPS Car Park Payment\",\\n    \"description\": \"EPS Car Park Payment\",\\n    \"amount\": \"-X.XX\"\\n  },\\n  ...\\n]`;\n\n  return {\n    json: {\n      prompt\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        -40
+      ],
+      "id": "250133a0-4f57-44a0-99d3-dbfb52c685da",
+      "name": "Data Cleaning"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send pdf to Mistral": {
+      "main": [
+        [
+          {
+            "node": "mistral - get signed url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mistral - get signed url": {
+      "main": [
+        [
+          {
+            "node": "Get Parsed Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Parsed Invoice": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tesseract": {
+      "main": [
+        [
+          {
+            "node": "Set Output Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Combain Pages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "send pdf to Mistral",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tesseract",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tesseract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combain Pages": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Image": {
+      "main": [
+        [
+          {
+            "node": "Tesseract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Output Data": {
+      "main": [
+        [
+          {
+            "node": "Data Cleaning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Cleaning": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "9aa07757-2aa4-4e29-bcf9-73069268e4e5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "96751ee354fd8dd7a8f4f3664391bdd8be5d2897c9237fb3d4d2d8d3f66502c9"
+  },
+  "id": "e8D4Ul08Cd1Djxle",
+  "tags": []
+}
