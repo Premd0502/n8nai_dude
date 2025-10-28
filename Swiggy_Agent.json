@@ -1,0 +1,321 @@
+{
+  "name": "Swiggy Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -100,
+        0
+      ],
+      "id": "c67c81c4-b740-42d6-842a-467193051e2d",
+      "name": "Telegram Trigger",
+      "webhookId": "c16f8b0d-d138-4dbb-9448-31d8e9ca6245",
+      "credentials": {
+        "telegramApi": {
+          "id": "NqVIUvUpKTMpOAlI",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d11d355a-1731-436e-ba5e-8709d4a9c43d",
+                    "leftValue": "={{ $json.message.text || \"\" }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7967e047-ebab-4323-b1dc-d5f6a9c22200",
+                    "leftValue": "error",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Error"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        120,
+        0
+      ],
+      "id": "f2f1b0b6-6f21-41a7-92b0-965ff8dc0974",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        340,
+        -120
+      ],
+      "id": "6aa55d5f-b42d-4d5a-bbac-7d7c77151971",
+      "name": "Telegram",
+      "webhookId": "2cff26e3-2e35-4437-ae5a-248c949601c6",
+      "credentials": {
+        "telegramApi": {
+          "id": "NqVIUvUpKTMpOAlI",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        540,
+        -140
+      ],
+      "id": "0ae2110d-2874-41e3-b045-6ac7bf0797c0",
+      "name": "Transcriber",
+      "credentials": {
+        "openAiApi": {
+          "id": "v0jAglhy2yTGipbT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=You are a helpful AI assistant with access to tools, including SerpAPI for retrieving the latest real-world information and Gmail for sending emails. Your primary function is to differentiate between **normal chat responses, live information queries, and email requests.**\n\n🔹 **For General Chat Questions:**  \n- Respond with a friendly, informative answer.  \n- If the user asks about real-time events, news, stock prices, or sports scores, use **SerpAPI** to fetch the latest data.  \n\n🔹 **For Live Information Retrieval (SerpAPI Queries):**  \n1️⃣ Detect when the user requests real-time information (e.g., latest news, sports scores, stock market updates).  \n2️⃣ Use **SerpAPI** to search and retrieve the most up-to-date details.  \n3️⃣ Return only **relevant and concise** information to the user.\n\n🔹 **For Email Requests:**  \n1️⃣ Extract the recipient's email, subject, and body from the user's message.  \n2️⃣ Send the email using the **Gmail tool** (DO NOT return the email content to the user).  \n3️⃣ Once the email is sent, return only this confirmation to Telegram:  \n   **\"✅ Email sent successfully to [recipient].\"**  \n4️⃣ If the email fails, return this message:  \n   **\"❌ Email could not be sent. Please try again later.\"**  \n\n📌 **Email Format for Gmail Execution:**  \n```json\n{\n  \"email\": {\n    \"to\": \"recipient@example.com\",\n    \"subject\": \"Generated Subject\",\n    \"body\": \"Formatted message body.\"\n  }\n}\n",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        740,
+        -60
+      ],
+      "id": "4f52acc9-338d-4799-9e6a-1e429fc09b0c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        140
+      ],
+      "id": "fe911ddf-2d8e-4429-8ddc-1175a02dd9de",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "v0jAglhy2yTGipbT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://64c5-183-82-30-180.ngrok-free.app/swiggy",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        -60
+      ],
+      "id": "4738ca0f-f1e4-45dd-8739-466b1b5e370a",
+      "name": "Swiggy Agent"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        -60
+      ],
+      "id": "08aaa92a-6928-47e9-bbca-0d74cca7a34e",
+      "name": "Wait",
+      "webhookId": "0942c67b-5051-47e6-9465-7c2c104028e9"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [
+          {
+            "node": "Transcriber",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcriber": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Swiggy Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1ddfbb22-b76b-4f79-aeea-dbfe71fcc309",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "96751ee354fd8dd7a8f4f3664391bdd8be5d2897c9237fb3d4d2d8d3f66502c9"
+  },
+  "id": "5IO4Z9SKsnXYEdL0",
+  "tags": []
+}
