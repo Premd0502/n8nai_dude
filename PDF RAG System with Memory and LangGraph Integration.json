@@ -1,0 +1,342 @@
+{
+  "name": "PDF RAG System with Memory and LangGraph Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowFileUploads": true,
+          "allowedFilesMimeTypes": "application/pdf",
+          "inputPlaceholder": "Ask me anything about your documents...",
+          "loadPreviousSession": "memory",
+          "showWelcomeScreen": true,
+          "getStarted": "Upload a PDF to get started",
+          "subtitle": "Upload PDFs and ask questions about them",
+          "title": "PDF RAG Assistant"
+        }
+      },
+      "id": "52070be9-63b7-43eb-80a7-ec0da12b0b0e",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        248,
+        408
+      ],
+      "webhookId": "37e61ddd-3b3c-4c60-9a3c-3d1cb9bb962d"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "1a142204-2dc6-4d62-b316-98b82c307d93",
+      "name": "Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        632
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "id",
+          "value": "pdf_rag_store"
+        }
+      },
+      "id": "43cdd3f2-7107-45cc-b4e0-435f3bfa99de",
+      "name": "Store Documents",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "138f9fc6-9939-49fa-ac2e-910ce3c43822",
+      "name": "OpenAI Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        528
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "xGn7c7TdKzx5ADz4",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "loader": "pdfLoader",
+        "textSplittingMode": "custom",
+        "options": {
+          "splitPages": true
+        }
+      },
+      "id": "2cb425f8-8279-4ab4-a4c3-a08f6b1e5fdf",
+      "name": "PDF Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "aab9a51f-4e4f-4f8c-8024-3227148a1e57",
+      "name": "Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        816,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful AI assistant that answers questions based on the provided PDF documents. Use the retriever tool to find relevant information from the documents. Always cite the source when answering. If you cannot find relevant information in the documents, say so clearly.",
+          "maxIterations": 10,
+          "returnIntermediateSteps": false
+        }
+      },
+      "id": "6b480026-6372-499c-92fc-61d4ecacaedc",
+      "name": "RAG Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1104,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "c2dc814b-ebcc-4898-b3e5-ef09886bb6f2",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1112,
+        736
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "xGn7c7TdKzx5ADz4",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "e6bbd268-f4ae-4a6d-9bd8-2a105cb73e9f",
+      "name": "Agent Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1240,
+        736
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a29f328d-fb89-44dc-b1c9-2e7b9a5007b9",
+      "name": "Vector Retriever",
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        672,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "memoryKey": {
+          "__rl": true,
+          "mode": "id",
+          "value": "pdf_rag_store"
+        }
+      },
+      "id": "0b15ae37-7c7c-47be-9f78-0d8410e75abb",
+      "name": "Retrieve Documents",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## PDF RAG System Setup\n\n1. Upload PDFs via chat\n2. Documents are split and embedded\n3. Stored in vector memory\n4. AI Agent retrieves relevant context",
+        "color": 2
+      },
+      "id": "4d551e4d-fbdf-40bd-a8b8-2f86ebb52d4f",
+      "name": "Sticky Note 545df41f",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        112,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Memory Configuration\n\nConversation history is maintained across sessions using Simple Memory",
+        "color": 3
+      },
+      "id": "7b0aab0d-a1e4-486d-9f9f-c56121fb3b85",
+      "name": "Sticky Note 00a93d6d",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        112,
+        464
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Store Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Chat Trigger",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Documents": {
+      "main": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store Documents",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Retrieve Documents",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Store Documents",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "PDF Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Documents": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "12c0d5c7-1e87-4c94-8a25-31e9794c8c60",
+  "meta": {
+    "instanceId": "d052f69f4db491836013ffbced75074fc9fd539346e9e6381f82f929531e878d"
+  },
+  "id": "kThe5NqFiAUb8RFb",
+  "tags": []
+}
