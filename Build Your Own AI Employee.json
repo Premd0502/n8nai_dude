@@ -1,0 +1,334 @@
+{
+  "name": "Build Your Own AI Employee",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -576,
+        -208
+      ],
+      "id": "29b9751c-0a8e-4887-b457-943edff6b5ef",
+      "name": "Telegram Trigger",
+      "webhookId": "1abce32d-ab06-4f95-a7fa-de2d6a539a6b",
+      "credentials": {
+        "telegramApi": {
+          "id": "lGpiLAbfY2Am66dt",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "keyvalue"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "9dd501ab-9d39-48ea-9d53-bb06cb3d85c9",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output.replace(/([_*[\\]()~`>#+=|{}.!-])/g, '\\\\$1') }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        -208
+      ],
+      "id": "7704e04e-06a5-4ca8-afa3-76bf18c901f7",
+      "name": "Send a text message",
+      "webhookId": "58c5a2b6-7924-49b0-a82e-17d9d05edd3d",
+      "credentials": {
+        "telegramApi": {
+          "id": "lGpiLAbfY2Am66dt",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {
+          "webSearch": {
+            "searchContextSize": "medium"
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -352,
+        16
+      ],
+      "id": "d19220cc-4635-4b20-8e76-c41af88c2dbd",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "xGn7c7TdKzx5ADz4",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        32
+      ],
+      "id": "8c2c746c-356d-4ad4-987f-9eda2cc8f390",
+      "name": "Send a message in Gmail",
+      "webhookId": "b95a1555-5306-4f26-bcc2-535339462ab4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bJi29ecv4oep09Oa",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "=premaitesting@gmail.com",
+          "mode": "id",
+          "__regex": "(^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', ``, 'string') }}"
+          ],
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        16
+      ],
+      "id": "6511066b-40cd-4897-ab29-11b7fb1a1bdf",
+      "name": "Schedule Meeting",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "AuKQgu3vGA87QrZM",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a personal AI assistant. Follow the rules below:\n\nUse \"Schedule Meeting\" tool to schedule meeting in google calendar. You can extract the start time, end time, attendees, description and summary from user's message. Make sure to politely ask date, start time, end time (or duration) and attendees if the user has not mentioned already. The current time is {{ $now }}\n\nUse \"Create Task\" tool to create tasks in the Google Task. Make sure you are extracting the task name and completion date from user's message This current time is  {{ $now }}\n\n\n- Use \"Add Expense\" tool to add expense in the My expenses sheet. Make sure to extract the category, amount and date (date will be the same date of user's message) from user's message. The category of the expense should be among these options - Food, Grocery, Travel, Medical, Education, Utilities. You can mark the category as \"Others\" if it is not among the options above.\n\n\n- Use \"Get Expense\" tool to read the expenses from Expence sheet. Provide the user a daily summary of expenses and total amount spent through \"Send Message in Telegram\" node.\n\n- Use \"Send Email\" tool to send emails via Gmail. Extract the recipient email address, subject, and message body from the user's request. Make sure to politely ask for recipient email, subject, and message content if the user has not mentioned them already.\n\n- After completing task, use \"Send Message in Telegram\" node, to confirm the user that the task is completed. Do not add any other detail, just mention \"Done. Thank you!\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -304,
+        -208
+      ],
+      "id": "452de7a6-9453-4608-b212-a2a25589d20a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "task": "MTA1NzUwMzQ3OTY2MTM3MzAyNzk6MDow",
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}",
+        "additionalFields": {
+          "completed": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Completion_Date', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleTasksTool",
+      "typeVersion": 1,
+      "position": [
+        48,
+        32
+      ],
+      "id": "cdce2f0d-dede-4633-b8ca-0ca8816e19a1",
+      "name": "Create Task",
+      "credentials": {
+        "googleTasksOAuth2Api": {
+          "id": "pjjdknw7hp8RNCNy",
+          "name": "Google Tasks OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', `Expense`, 'string') }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $fromAI('Sheet1', ``, 'string') }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        48
+      ],
+      "id": "97983c41-6a18-4cb2-a572-b040b8f10798",
+      "name": "Expence",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ktNdpUCarOa7LZBv",
+          "name": "Google Sheets OAuth2 API"
+        }
+      },
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Meeting": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Task": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expence": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "81bb0510-9117-4811-88de-c4ec24a62646",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d052f69f4db491836013ffbced75074fc9fd539346e9e6381f82f929531e878d"
+  },
+  "id": "690EznbVr9lz845q",
+  "tags": []
+}
